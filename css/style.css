@@ -563,6 +563,20 @@ body:not([data-theme="light"]) .icon--moon { display: block; }
     grid-template-columns: 1fr 380px;
 }
 
+/* Journey viewer must sit above the overlay on all screen sizes */
+.journey-viewer:not([hidden]) {
+    position: relative;
+    z-index: 260;
+}
+
+/* Hide overlay on desktop - journey viewer is inline in grid */
+@media (min-width: 1025px) {
+    .overlay--visible {
+        opacity: 0;
+        pointer-events: none;
+    }
+}
+
 /* ============================================
    Panels
    ============================================ */
