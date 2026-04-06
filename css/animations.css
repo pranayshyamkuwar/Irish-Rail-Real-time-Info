@@ -1,0 +1,180 @@
+/* ============================================
+   Irish Rail Live - Animations
+   ============================================ */
+
+/* Pulse Dot (Live indicator) */
+.pulse-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--color-ontime);
+    position: relative;
+    flex-shrink: 0;
+}
+
+.pulse-dot::before {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    background: var(--color-ontime);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.4; transform: scale(1); }
+    50% { opacity: 0; transform: scale(1.8); }
+}
+
+/* Pulse Glow (current stop on timeline) */
+@keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 0 4px rgba(0, 132, 61, 0.2), 0 0 12px rgba(0, 132, 61, 0.3); }
+    50% { box-shadow: 0 0 0 8px rgba(0, 132, 61, 0.1), 0 0 20px rgba(0, 132, 61, 0.2); }
+}
+
+/* Shimmer (skeleton loading) */
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Slide in from bottom (board rows) */
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.board-table__row {
+    animation: slideInUp 0.4s ease backwards;
+}
+
+.board-table__row:nth-child(1) { animation-delay: 0.02s; }
+.board-table__row:nth-child(2) { animation-delay: 0.06s; }
+.board-table__row:nth-child(3) { animation-delay: 0.10s; }
+.board-table__row:nth-child(4) { animation-delay: 0.14s; }
+.board-table__row:nth-child(5) { animation-delay: 0.18s; }
+.board-table__row:nth-child(6) { animation-delay: 0.22s; }
+.board-table__row:nth-child(7) { animation-delay: 0.26s; }
+.board-table__row:nth-child(8) { animation-delay: 0.30s; }
+.board-table__row:nth-child(9) { animation-delay: 0.34s; }
+.board-table__row:nth-child(10) { animation-delay: 0.38s; }
+.board-table__row:nth-child(n+11) { animation-delay: 0.42s; }
+
+/* Slide in from right (journey viewer) */
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Timeline stop entrance */
+@keyframes timelineEntry {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.timeline-stop {
+    animation: timelineEntry 0.3s ease backwards;
+}
+
+.timeline-stop:nth-child(1) { animation-delay: 0.05s; }
+.timeline-stop:nth-child(2) { animation-delay: 0.10s; }
+.timeline-stop:nth-child(3) { animation-delay: 0.15s; }
+.timeline-stop:nth-child(4) { animation-delay: 0.20s; }
+.timeline-stop:nth-child(5) { animation-delay: 0.25s; }
+.timeline-stop:nth-child(6) { animation-delay: 0.30s; }
+.timeline-stop:nth-child(7) { animation-delay: 0.35s; }
+.timeline-stop:nth-child(8) { animation-delay: 0.40s; }
+.timeline-stop:nth-child(9) { animation-delay: 0.45s; }
+.timeline-stop:nth-child(10) { animation-delay: 0.50s; }
+.timeline-stop:nth-child(n+11) { animation-delay: 0.55s; }
+
+/* Fade in (train cards) */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.train-card {
+    animation: fadeInUp 0.4s ease backwards;
+}
+
+.train-card:nth-child(1) { animation-delay: 0.02s; }
+.train-card:nth-child(2) { animation-delay: 0.05s; }
+.train-card:nth-child(3) { animation-delay: 0.08s; }
+.train-card:nth-child(4) { animation-delay: 0.11s; }
+.train-card:nth-child(5) { animation-delay: 0.14s; }
+.train-card:nth-child(6) { animation-delay: 0.17s; }
+.train-card:nth-child(n+7) { animation-delay: 0.20s; }
+
+/* Rotate (refresh button) */
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.btn--icon.refreshing .icon {
+    animation: spin 1s linear infinite;
+}
+
+/* Search results dropdown */
+@keyframes dropdownOpen {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.search-results:not([hidden]) {
+    animation: dropdownOpen 0.2s ease;
+}
+
+/* Panel slide in (journey viewer on desktop) */
+.journey-viewer:not([hidden]) {
+    animation: slideInRight 0.3s ease;
+}
+
+/* Chevron rotation */
+.icon--chevron {
+    transition: transform var(--transition-fast);
+}
+
+.icon--chevron.rotated {
+    transform: rotate(180deg);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}

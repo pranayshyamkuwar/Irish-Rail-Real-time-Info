@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Real-time Irish Rail train information dashboard. Live departures, arrivals, and train tracking powered by Iarnród Éireann data.">
+    <meta name="keywords" content="Irish Rail, Iarnród Éireann, train times, DART, real-time, departures, arrivals">
+    <meta property="og:title" content="Irish Rail Live - Real-time Train Dashboard">
+    <meta property="og:description" content="Live train departures, arrivals, and tracking for Irish Rail services.">
+    <meta property="og:type" content="website">
+    <title>Irish Rail Live - Real-time Train Dashboard</title>
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/animations.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header__inner">
+            <div class="header__brand">
+                <div class="header__logo">
+                    <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="header__logo-icon">
+                        <rect width="40" height="40" rx="8" fill="var(--color-primary)"/>
+                        <path d="M8 28h24M10 24h20M12 20h16" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+                        <circle cx="14" cy="28" r="3" fill="white" stroke="var(--color-primary)" stroke-width="1.5"/>
+                        <circle cx="26" cy="28" r="3" fill="white" stroke="var(--color-primary)" stroke-width="1.5"/>
+                        <path d="M14 20V14a6 6 0 0 1 12 0v6" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    <div>
+                        <h1 class="header__title">Irish Rail <span class="header__title-accent">Live</span></h1>
+                        <p class="header__subtitle">Real-time Train Information</p>
+                    </div>
+                </div>
+                <div class="header__live-badge" aria-live="polite">
+                    <span class="pulse-dot"></span>
+                    <span class="header__live-text">LIVE</span>
+                </div>
+            </div>
+            <div class="header__controls">
+                <div class="header__refresh">
+                    <span class="header__countdown" id="countdown" title="Next refresh"></span>
+                    <button class="btn btn--icon" id="refreshBtn" title="Refresh now" aria-label="Refresh data">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon">
+                            <polyline points="23 4 23 10 17 10"></polyline>
+                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                        </svg>
+                    </button>
+                    <label class="toggle" title="Auto-refresh">
+                        <input type="checkbox" id="autoRefreshToggle" checked>
+                        <span class="toggle__slider"></span>
+                        <span class="toggle__label">Auto</span>
+                    </label>
+                </div>
+                <button class="btn btn--icon" id="themeToggle" title="Toggle theme" aria-label="Toggle dark/light theme">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon--sun">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon--moon">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <!-- Search & Filter Section -->
+        <section class="search-section" aria-label="Station search and filters">
+            <div class="filter-bar" id="filterBar" role="tablist" aria-label="Train type filter">
+                <button class="filter-btn filter-btn--active" data-type="All" role="tab" aria-selected="true">
+                    <svg viewBox="0 0 20 20" fill="currentColor" class="filter-icon"><circle cx="10" cy="10" r="4"/></svg>
+                    All
+                </button>
+                <button class="filter-btn" data-type="DART" role="tab" aria-selected="false">
+                    <span class="type-dot type-dot--dart"></span>
+                    DART
+                </button>
+                <button class="filter-btn" data-type="Mainline" role="tab" aria-selected="false">
+                    <span class="type-dot type-dot--mainline"></span>
+                    Mainline
+                </button>
+                <button class="filter-btn" data-type="Suburban" role="tab" aria-selected="false">
+                    <span class="type-dot type-dot--suburban"></span>
+                    Suburban
+                </button>
+            </div>
+
+            <div class="search-wrapper">
+                <div class="search-box" role="combobox" aria-expanded="false" aria-haspopup="listbox">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="search-box__icon">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input
+                        type="text"
+                        id="stationSearch"
+                        class="search-box__input"
+                        placeholder="Search for a station..."
+                        aria-label="Search stations"
+                        aria-autocomplete="list"
+                        aria-controls="searchResults"
+                        autocomplete="off"
+                    >
+                    <button class="search-box__clear" id="searchClear" aria-label="Clear search" hidden>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                </div>
+                <ul class="search-results" id="searchResults" role="listbox" hidden></ul>
+            </div>
+
+            <div class="quick-stations" id="quickStations" aria-label="Popular stations">
+                <span class="quick-stations__label">Popular:</span>
+            </div>
+        </section>
+
+        <!-- Dashboard Grid -->
+        <div class="dashboard">
+            <!-- Departure Board -->
+            <section class="panel departure-board" id="departureBoard" aria-label="Departure board">
+                <div class="panel__header">
+                    <h2 class="panel__title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="panel__icon">
+                            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                        </svg>
+                        <span id="boardTitle">Select a Station</span>
+                    </h2>
+                    <div class="panel__tabs" role="tablist">
+                        <button class="tab tab--active" data-tab="departures" role="tab" aria-selected="true">Departures</button>
+                        <button class="tab" data-tab="arrivals" role="tab" aria-selected="false">Arrivals</button>
+                    </div>
+                </div>
+                <div class="panel__body" id="boardBody">
+                    <div class="empty-state" id="boardEmpty">
+                        <svg viewBox="0 0 120 120" fill="none" class="empty-state__icon">
+                            <circle cx="60" cy="60" r="50" stroke="var(--color-text-muted)" stroke-width="1.5" stroke-dasharray="8 4" opacity="0.3"/>
+                            <path d="M40 75h40M45 65h30M50 55h20" stroke="var(--color-text-muted)" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+                            <circle cx="60" cy="40" r="8" stroke="var(--color-primary)" stroke-width="2" fill="none"/>
+                            <path d="M60 36v8M56 40h8" stroke="var(--color-primary)" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                        <p class="empty-state__text">Search for a station to see live departures</p>
+                        <p class="empty-state__hint">Try "Dublin Heuston" or "Connolly"</p>
+                    </div>
+                    <div class="board-table-wrap" id="boardTableWrap" hidden>
+                        <table class="board-table" aria-live="polite">
+                            <thead>
+                                <tr>
+                                    <th class="board-table__th">Status</th>
+                                    <th class="board-table__th">Destination</th>
+                                    <th class="board-table__th">Due</th>
+                                    <th class="board-table__th">Expected</th>
+                                    <th class="board-table__th board-table__th--type">Type</th>
+                                    <th class="board-table__th board-table__th--origin">Origin</th>
+                                </tr>
+                            </thead>
+                            <tbody id="boardTableBody"></tbody>
+                        </table>
+                    </div>
+                    <div class="skeleton-board" id="boardSkeleton" hidden>
+                        <div class="skeleton-row"></div>
+                        <div class="skeleton-row"></div>
+                        <div class="skeleton-row"></div>
+                        <div class="skeleton-row"></div>
+                        <div class="skeleton-row"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Journey Viewer -->
+            <aside class="panel journey-viewer" id="journeyViewer" aria-label="Train journey details" hidden>
+                <div class="panel__header">
+                    <h2 class="panel__title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="panel__icon">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        <span id="journeyTitle">Train Journey</span>
+                    </h2>
+                    <button class="btn btn--icon btn--close" id="journeyClose" aria-label="Close journey viewer">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                </div>
+                <div class="panel__body" id="journeyBody">
+                    <div class="journey-info" id="journeyInfo"></div>
+                    <div class="journey-timeline" id="journeyTimeline"></div>
+                    <div class="skeleton-journey" id="journeySkeleton" hidden>
+                        <div class="skeleton-stop"></div>
+                        <div class="skeleton-stop"></div>
+                        <div class="skeleton-stop"></div>
+                        <div class="skeleton-stop"></div>
+                        <div class="skeleton-stop"></div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+
+        <!-- Running Trains Section -->
+        <section class="panel running-trains" id="runningTrains" aria-label="Currently running trains">
+            <div class="panel__header">
+                <h2 class="panel__title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="panel__icon">
+                        <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path>
+                        <line x1="4" y1="22" x2="4" y2="15"></line>
+                    </svg>
+                    Running Trains
+                    <span class="badge" id="trainCount">0</span>
+                </h2>
+                <button class="btn btn--text" id="toggleTrains">
+                    <span id="toggleTrainsText">Show</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon--chevron">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </button>
+            </div>
+            <div class="panel__body trains-grid-wrap" id="trainsGridWrap" hidden>
+                <div class="trains-grid" id="trainsGrid"></div>
+            </div>
+        </section>
+
+        <!-- Coverage Notice -->
+        <section class="notice" aria-label="Coverage information">
+            <div class="notice__inner">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="notice__icon">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                <div>
+                    <p class="notice__title">About Real-time Coverage</p>
+                    <p class="notice__text">
+                        This information is an estimate based on train locations from Iarnr&oacute;d &Eacute;ireann's central signalling system and scheduled journey times.
+                        Trains indicated as late can make up time. Real-time coverage is limited in some areas:
+                    </p>
+                    <ul class="notice__list">
+                        <li>Athlone - Westport/Ballina Line</li>
+                        <li>Cork Station &amp; Cork - Cobh/Midleton Line</li>
+                        <li>Mallow - Tralee Line</li>
+                        <li>Ballybrophy - Limerick Line</li>
+                        <li>Limerick - Ennis Line &amp; Limerick Jct - Waterford Line</li>
+                        <li>Greystones - Rosslare Line</li>
+                        <li>Dundalk - Belfast Line</li>
+                    </ul>
+                    <p class="notice__text notice__text--muted">In these areas, scheduled times are shown instead.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer__inner">
+            <p>Powered by <a href="http://api.irishrail.ie/realtime/" target="_blank" rel="noopener">Iarnr&oacute;d &Eacute;ireann Realtime API</a></p>
+            <p class="footer__updated">Last updated: <span id="lastUpdated">--</span></p>
+            <p><a href="https://github.com/pranayshyamkuwar/Irish-Rail-Real-time-Info" target="_blank" rel="noopener">View on GitHub</a></p>
+        </div>
+    </footer>
+
+    <!-- Journey Viewer Mobile Overlay -->
+    <div class="overlay" id="overlay" hidden></div>
+
+    <!-- Error Toast -->
+    <div class="toast-container" id="toastContainer" aria-live="assertive"></div>
+
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>

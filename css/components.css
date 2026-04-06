@@ -1,0 +1,559 @@
+/* ============================================
+   Irish Rail Live - Component Styles
+   ============================================ */
+
+/* ============================================
+   Board Table (Departure/Arrival Board)
+   ============================================ */
+.board-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.board-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.board-table__th {
+    text-align: left;
+    padding: var(--space-sm) var(--space-md);
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-text-muted);
+    border-bottom: 1px solid var(--color-border);
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    background: var(--color-surface);
+}
+
+.board-table__row {
+    border-bottom: 1px solid var(--color-border-light);
+    cursor: pointer;
+    transition: background var(--transition-fast);
+}
+
+.board-table__row:hover {
+    background: var(--color-surface-hover);
+}
+
+.board-table__row--selected {
+    background: rgba(0, 132, 61, 0.08);
+    border-left: 3px solid var(--color-primary);
+}
+
+.board-table__td {
+    padding: var(--space-sm) var(--space-md);
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+.board-table__td--dest {
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.board-table__td--time {
+    font-family: var(--font-mono);
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+.board-table__td--due {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--color-primary-light);
+}
+
+.board-table__td--origin {
+    color: var(--color-text-secondary);
+    font-size: 0.85rem;
+}
+
+/* Status Indicator */
+.status-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.status--ontime .status-dot { background: var(--color-ontime); box-shadow: 0 0 6px var(--color-ontime); }
+.status--ontime .status-label { color: var(--color-ontime); }
+
+.status--slight .status-dot { background: var(--color-slight); box-shadow: 0 0 6px var(--color-slight); }
+.status--slight .status-label { color: var(--color-slight); }
+
+.status--late .status-dot { background: var(--color-late); box-shadow: 0 0 6px var(--color-late); }
+.status--late .status-label { color: var(--color-late); }
+
+.status--unknown .status-dot { background: var(--color-unknown); }
+.status--unknown .status-label { color: var(--color-unknown); }
+
+/* Type Badge */
+.type-badge {
+    display: inline-block;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.type-badge--dart {
+    background: rgba(0, 166, 81, 0.15);
+    color: var(--color-dart);
+    border: 1px solid rgba(0, 166, 81, 0.3);
+}
+
+.type-badge--mainline {
+    background: rgba(0, 114, 206, 0.15);
+    color: var(--color-mainline);
+    border: 1px solid rgba(0, 114, 206, 0.3);
+}
+
+.type-badge--suburban {
+    background: rgba(247, 148, 29, 0.15);
+    color: var(--color-suburban);
+    border: 1px solid rgba(247, 148, 29, 0.3);
+}
+
+.type-badge--unknown {
+    background: var(--color-surface-alt);
+    color: var(--color-text-muted);
+}
+
+/* Late Badge */
+.late-badge {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--color-late);
+    font-family: var(--font-mono);
+}
+
+/* Direction Arrow */
+.direction-arrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--color-text-muted);
+    font-size: 0.8rem;
+}
+
+.direction-arrow svg {
+    width: 14px;
+    height: 14px;
+}
+
+/* ============================================
+   Journey Viewer / Timeline
+   ============================================ */
+.journey-info {
+    padding: var(--space-md) var(--space-lg);
+    border-bottom: 1px solid var(--color-border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-md);
+}
+
+.journey-info__item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.journey-info__label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-text-muted);
+}
+
+.journey-info__value {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.journey-timeline {
+    padding: var(--space-lg);
+    position: relative;
+}
+
+.timeline-stop {
+    display: flex;
+    gap: var(--space-md);
+    position: relative;
+    padding-bottom: var(--space-lg);
+}
+
+.timeline-stop:last-child {
+    padding-bottom: 0;
+}
+
+/* Timeline line */
+.timeline-stop::before {
+    content: '';
+    position: absolute;
+    left: 11px;
+    top: 24px;
+    bottom: 0;
+    width: 2px;
+    background: var(--color-border);
+}
+
+.timeline-stop:last-child::before {
+    display: none;
+}
+
+/* Timeline dot */
+.timeline-stop__dot {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-surface-alt);
+    border: 2px solid var(--color-border);
+    position: relative;
+    z-index: 1;
+}
+
+.timeline-stop--passed .timeline-stop__dot {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+.timeline-stop--passed::before {
+    background: var(--color-primary);
+}
+
+.timeline-stop--current .timeline-stop__dot {
+    background: var(--color-primary);
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 4px rgba(0, 132, 61, 0.2), 0 0 12px rgba(0, 132, 61, 0.3);
+    animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.timeline-stop--current::before {
+    background: linear-gradient(to bottom, var(--color-primary), var(--color-border));
+}
+
+.timeline-stop__dot-inner {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: white;
+}
+
+.timeline-stop--future .timeline-stop__dot-inner {
+    background: var(--color-text-muted);
+    width: 4px;
+    height: 4px;
+}
+
+/* Timeline content */
+.timeline-stop__content {
+    flex: 1;
+    min-width: 0;
+}
+
+.timeline-stop__station {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--color-text);
+    margin-bottom: 2px;
+}
+
+.timeline-stop--current .timeline-stop__station {
+    color: var(--color-primary-light);
+}
+
+.timeline-stop--future .timeline-stop__station {
+    color: var(--color-text-secondary);
+}
+
+.timeline-stop__times {
+    display: flex;
+    gap: var(--space-md);
+    font-size: 0.78rem;
+}
+
+.timeline-stop__time {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.timeline-stop__time-label {
+    color: var(--color-text-muted);
+}
+
+.timeline-stop__time-value {
+    font-family: var(--font-mono);
+    font-weight: 500;
+    color: var(--color-text-secondary);
+}
+
+.timeline-stop__time-value--late {
+    color: var(--color-late);
+    text-decoration: line-through;
+    text-decoration-color: var(--color-late);
+}
+
+.timeline-stop__time-value--actual {
+    color: var(--color-ontime);
+    font-weight: 700;
+}
+
+.timeline-stop__type {
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+    margin-top: 2px;
+}
+
+/* ============================================
+   Train Cards (Running Trains)
+   ============================================ */
+.trains-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--space-md);
+    padding: var(--space-lg);
+}
+
+.train-card {
+    background: var(--color-bg-elevated);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-md);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.train-card:hover {
+    border-color: var(--color-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px var(--color-shadow);
+}
+
+.train-card__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.train-card__code {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--color-text);
+}
+
+.train-card__route {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    font-size: 0.85rem;
+}
+
+.train-card__origin,
+.train-card__destination {
+    font-weight: 500;
+    color: var(--color-text-secondary);
+}
+
+.train-card__destination {
+    color: var(--color-text);
+    font-weight: 600;
+}
+
+.train-card__arrow {
+    color: var(--color-primary-light);
+    flex-shrink: 0;
+}
+
+.train-card__arrow svg {
+    width: 16px;
+    height: 16px;
+}
+
+.train-card__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: var(--space-sm);
+    border-top: 1px solid var(--color-border-light);
+}
+
+.train-card__message {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+/* ============================================
+   Skeleton Loading
+   ============================================ */
+.skeleton-board,
+.skeleton-journey {
+    padding: var(--space-md);
+}
+
+.skeleton-row {
+    height: 48px;
+    background: linear-gradient(90deg,
+        var(--color-surface-alt) 25%,
+        var(--color-surface-hover) 50%,
+        var(--color-surface-alt) 75%
+    );
+    background-size: 200% 100%;
+    border-radius: var(--radius-sm);
+    margin-bottom: var(--space-sm);
+    animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.skeleton-row:nth-child(2) { animation-delay: 0.1s; width: 95%; }
+.skeleton-row:nth-child(3) { animation-delay: 0.2s; width: 90%; }
+.skeleton-row:nth-child(4) { animation-delay: 0.3s; width: 85%; }
+.skeleton-row:nth-child(5) { animation-delay: 0.4s; width: 80%; }
+
+.skeleton-stop {
+    display: flex;
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+    align-items: flex-start;
+}
+
+.skeleton-stop::before {
+    content: '';
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--color-surface-alt);
+    flex-shrink: 0;
+    animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.skeleton-stop::after {
+    content: '';
+    flex: 1;
+    height: 36px;
+    background: linear-gradient(90deg,
+        var(--color-surface-alt) 25%,
+        var(--color-surface-hover) 50%,
+        var(--color-surface-alt) 75%
+    );
+    background-size: 200% 100%;
+    border-radius: var(--radius-sm);
+    animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* ============================================
+   Error State
+   ============================================ */
+.error-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-2xl) var(--space-lg);
+    text-align: center;
+}
+
+.error-state__icon {
+    width: 48px;
+    height: 48px;
+    color: var(--color-late);
+    margin-bottom: var(--space-md);
+}
+
+.error-state__text {
+    font-size: 0.9rem;
+    color: var(--color-text-secondary);
+    margin-bottom: var(--space-md);
+}
+
+.error-state__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-sm) var(--space-lg);
+    background: var(--color-primary);
+    color: white;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.85rem;
+    transition: background var(--transition-fast);
+}
+
+.error-state__btn:hover {
+    background: var(--color-primary-dark);
+}
+
+/* ============================================
+   No Results
+   ============================================ */
+.no-results {
+    padding: var(--space-lg);
+    text-align: center;
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+}
+
+/* ============================================
+   Responsive Table
+   ============================================ */
+@media (max-width: 768px) {
+    .board-table__th--type,
+    .board-table__th--origin {
+        display: none;
+    }
+
+    .board-table__td:nth-child(5),
+    .board-table__td:nth-child(6) {
+        display: none;
+    }
+
+    .board-table__td {
+        padding: var(--space-sm) var(--space-sm);
+    }
+
+    .trains-grid {
+        grid-template-columns: 1fr;
+        padding: var(--space-md);
+    }
+
+    .journey-info {
+        padding: var(--space-sm) var(--space-md);
+    }
+
+    .journey-timeline {
+        padding: var(--space-md);
+    }
+}
