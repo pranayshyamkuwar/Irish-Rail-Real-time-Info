@@ -4,11 +4,10 @@
  */
 
 import { clearCache } from './api.js';
-import { initStationSearch } from './components/stationSearch.js';
-import { initDepartureBoard, loadStation, refresh as refreshBoard, setFilter as setBoardFilter, resetBoard, setDestination } from './components/departureBoard.js';
-import { initFilterBar } from './components/filterBar.js';
+import { initStationSearch, setAvailableDestinations } from './components/stationSearch.js';
+import { initDepartureBoard, loadStation, refresh as refreshBoard, resetBoard, setDestination } from './components/departureBoard.js';
 import { initJourneyViewer, loadJourney } from './components/journeyViewer.js';
-import { initTrainTracker, setFilter as setTrainsFilter, loadTrains } from './components/trainTracker.js';
+import { initTrainTracker, loadTrains } from './components/trainTracker.js';
 import { $, formatTimestamp, showToast } from './utils/helpers.js';
 
 // ============================================
@@ -31,8 +30,7 @@ async function init() {
     loadTheme();
 
     // Initialize components
-    initFilterBar(handleFilterChange);
-    initDepartureBoard(handleTrainSelect);
+    initDepartureBoard(handleTrainSelect, handleStationDataLoaded);
     initJourneyViewer();
     initTrainTracker(handleTrainCardClick);
 
@@ -58,7 +56,6 @@ async function init() {
         } else {
             if (state.autoRefresh) {
                 startRefreshCountdown();
-                // Refresh immediately if tab was hidden
                 doRefresh();
             }
         }
@@ -92,11 +89,19 @@ function handleStationSelect(station) {
 }
 
 /**
+ * Called after station data loads - updates the "To" dropdown with available destinations
+ */
+function handleStationDataLoaded(destinations) {
+    setAvailableDestinations(destinations);
+}
+
+/**
  * Handle clear search - reset board to empty state
  */
 function handleClearSearch() {
     state.currentStation = null;
     resetBoard();
+    setAvailableDestinations([]);
     history.replaceState(null, '', window.location.pathname);
 }
 
@@ -109,14 +114,6 @@ function handleDestinationSelect(station) {
     } else {
         setDestination('');
     }
-}
-
-/**
- * Handle filter change
- */
-function handleFilterChange(filter) {
-    setBoardFilter(filter);
-    setTrainsFilter(filter);
 }
 
 /**
