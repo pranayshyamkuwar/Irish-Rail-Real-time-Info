@@ -5,7 +5,7 @@
 
 import { clearCache } from './api.js';
 import { initStationSearch } from './components/stationSearch.js';
-import { initDepartureBoard, loadStation, refresh as refreshBoard, setFilter as setBoardFilter } from './components/departureBoard.js';
+import { initDepartureBoard, loadStation, refresh as refreshBoard, setFilter as setBoardFilter, resetBoard, setDestination } from './components/departureBoard.js';
 import { initFilterBar } from './components/filterBar.js';
 import { initJourneyViewer, loadJourney } from './components/journeyViewer.js';
 import { initTrainTracker, setFilter as setTrainsFilter, loadTrains } from './components/trainTracker.js';
@@ -37,7 +37,11 @@ async function init() {
     initTrainTracker(handleTrainCardClick);
 
     // Station search - loads stations and sets up autocomplete
-    await initStationSearch(handleStationSelect);
+    await initStationSearch({
+        onSelect: handleStationSelect,
+        onClear: handleClearSearch,
+        onDestination: handleDestinationSelect,
+    });
 
     // Set up header controls
     setupAutoRefresh();
@@ -84,6 +88,26 @@ function handleStationSelect(station) {
     // Reset refresh countdown
     if (state.autoRefresh) {
         startRefreshCountdown();
+    }
+}
+
+/**
+ * Handle clear search - reset board to empty state
+ */
+function handleClearSearch() {
+    state.currentStation = null;
+    resetBoard();
+    history.replaceState(null, '', window.location.pathname);
+}
+
+/**
+ * Handle destination station selection for From/To filtering
+ */
+function handleDestinationSelect(station) {
+    if (station) {
+        setDestination(station.StationDesc);
+    } else {
+        setDestination('');
     }
 }
 
@@ -208,7 +232,6 @@ function loadTheme() {
     if (saved) {
         document.documentElement.setAttribute('data-theme', saved);
     }
-    // Default is dark (no attribute needed, CSS treats it as default)
 }
 
 // ============================================
@@ -223,17 +246,12 @@ function handleHashRoute() {
     const stationCode = params.get('station');
 
     if (stationCode) {
-        // Wait for stations to load, then select
         const checkAndSelect = () => {
-            const searchInput = $('#stationSearch');
-            // Trigger station load by code
             handleStationSelect({
                 StationCode: stationCode,
-                StationDesc: stationCode, // Will be updated when data loads
+                StationDesc: stationCode,
             });
         };
-
-        // Slight delay to let stations load
         setTimeout(checkAndSelect, 1500);
     }
 }

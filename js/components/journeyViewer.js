@@ -16,6 +16,16 @@ export function initJourneyViewer() {
     closeBtn.addEventListener('click', closeJourney);
     overlay.addEventListener('click', closeJourney);
 
+    // Close on click outside (works on desktop where overlay is hidden)
+    document.addEventListener('click', (e) => {
+        const viewer = $('#journeyViewer');
+        if (viewer.hidden) return;
+        // If click is outside the journey viewer and not on a board row (which opens it)
+        if (!e.target.closest('#journeyViewer') && !e.target.closest('.board-table__row') && !e.target.closest('.train-card')) {
+            closeJourney();
+        }
+    });
+
     // Close on Escape
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
@@ -39,11 +49,18 @@ export async function loadJourney(train) {
 
     // Show viewer
     viewer.hidden = false;
-    overlay.hidden = false;
-    requestAnimationFrame(() => {
-        overlay.classList.add('overlay--visible');
+    // Only show overlay on mobile/tablet (<=1024px)
+    const isMobile = window.innerWidth <= 1024;
+    if (isMobile) {
+        overlay.hidden = false;
+        requestAnimationFrame(() => {
+            overlay.classList.add('overlay--visible');
+            viewer.classList.add('journey-viewer--open');
+        });
+    } else {
+        overlay.hidden = true;
         viewer.classList.add('journey-viewer--open');
-    });
+    }
 
     journeyTitle.textContent = `Train ${train.Traincode}`;
     journeyTimeline.innerHTML = '';
