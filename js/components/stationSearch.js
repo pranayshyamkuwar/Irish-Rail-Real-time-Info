@@ -1,10 +1,10 @@
 /**
  * Station Search Component
- * Autocomplete search with popular station quick-picks
+ * Autocomplete search with From/To inputs and popular station quick-picks
  */
 
 import { getAllStations } from '../api.js';
-import { debounce, el, $, fuzzyMatch, fuzzyScore, showToast } from '../utils/helpers.js';
+import { debounce, el, $, fuzzyScore, showToast } from '../utils/helpers.js';
 
 const POPULAR_STATIONS = [
     { name: 'Dublin Heuston', code: 'HSTON' },
@@ -18,20 +18,24 @@ const POPULAR_STATIONS = [
 ];
 
 let allStations = [];
-let filteredStations = [];
-let activeIndex = -1;
 let onSelectCallback = null;
+let onClearCallback = null;
+let onDestinationCallback = null;
+
+// Track state for each search input
+const searchState = {
+    from: { filteredStations: [], activeIndex: -1 },
+    to: { filteredStations: [], activeIndex: -1 },
+};
 
 /**
  * Initialize the station search component
- * @param {Function} onSelect - Callback when a station is selected: (station) => void
+ * @param {Object} callbacks - { onSelect, onClear, onDestination }
  */
-export async function initStationSearch(onSelect) {
-    onSelectCallback = onSelect;
-    const searchInput = $('#stationSearch');
-    const searchClear = $('#searchClear');
-    const searchResults = $('#searchResults');
-    const quickStationsContainer = $('#quickStations');
+export async function initStationSearch(callbacks) {
+    onSelectCallback = callbacks.onSelect;
+    onClearCallback = callbacks.onClear;
+    onDestinationCallback = callbacks.onDestination;
 
     // Load all stations
     try {
@@ -41,25 +45,52 @@ export async function initStationSearch(onSelect) {
         allStations = [];
     }
 
-    // Render popular stations
-    renderQuickStations(quickStationsContainer);
+    // Setup "From" search
+    setupSearchInput('stationSearch', 'searchClear', 'searchResults', 'from', (station) => {
+        if (onSelectCallback) onSelectCallback(station);
+    });
 
-    // Search input handler
+    // Setup "To" search
+    setupSearchInput('destSearch', 'destClear', 'destResults', 'to', (station) => {
+        if (onDestinationCallback) onDestinationCallback(station);
+    });
+
+    // Render popular stations
+    renderQuickStations($('#quickStations'));
+}
+
+/**
+ * Setup autocomplete for a search input
+ */
+function setupSearchInput(inputId, clearId, resultsId, stateKey, onSelect) {
+    const searchInput = $(`#${inputId}`);
+    const searchClear = $(`#${clearId}`);
+    const searchResults = $(`#${resultsId}`);
+
+    if (!searchInput || !searchClear || !searchResults) return;
+
+    const state = searchState[stateKey];
+
     const handleSearch = debounce((query) => {
         if (!query || query.length < 1) {
-            hideResults();
+            hideResults(searchResults);
             return;
         }
-        filteredStations = allStations
+        state.filteredStations = allStations
             .map(s => ({ ...s, score: fuzzyScore(query, s.StationDesc + (s.StationAlias || '')) }))
             .filter(s => s.score > 0)
             .sort((a, b) => b.score - a.score)
             .slice(0, 15);
 
-        if (filteredStations.length === 0) {
-            showNoResults();
+        if (state.filteredStations.length === 0) {
+            showNoResults(searchResults);
         } else {
-            renderResults(filteredStations);
+            renderResults(state.filteredStations, searchResults, state, (station) => {
+                searchInput.value = station.StationDesc;
+                searchClear.hidden = false;
+                hideResults(searchResults);
+                onSelect(station);
+            });
         }
     }, 200);
 
@@ -73,8 +104,15 @@ export async function initStationSearch(onSelect) {
     searchClear.addEventListener('click', () => {
         searchInput.value = '';
         searchClear.hidden = true;
-        hideResults();
+        hideResults(searchResults);
         searchInput.focus();
+
+        if (stateKey === 'from' && onClearCallback) {
+            onClearCallback();
+        }
+        if (stateKey === 'to' && onDestinationCallback) {
+            onDestinationCallback(null);
+        }
     });
 
     // Keyboard navigation
@@ -85,22 +123,26 @@ export async function initStationSearch(onSelect) {
         switch (e.key) {
             case 'ArrowDown':
                 e.preventDefault();
-                activeIndex = Math.min(activeIndex + 1, items.length - 1);
-                updateActiveItem(items);
+                state.activeIndex = Math.min(state.activeIndex + 1, items.length - 1);
+                updateActiveItem(items, state.activeIndex);
                 break;
             case 'ArrowUp':
                 e.preventDefault();
-                activeIndex = Math.max(activeIndex - 1, 0);
-                updateActiveItem(items);
+                state.activeIndex = Math.max(state.activeIndex - 1, 0);
+                updateActiveItem(items, state.activeIndex);
                 break;
             case 'Enter':
                 e.preventDefault();
-                if (activeIndex >= 0 && activeIndex < filteredStations.length) {
-                    selectStation(filteredStations[activeIndex]);
+                if (state.activeIndex >= 0 && state.activeIndex < state.filteredStations.length) {
+                    const station = state.filteredStations[state.activeIndex];
+                    searchInput.value = station.StationDesc;
+                    searchClear.hidden = false;
+                    hideResults(searchResults);
+                    onSelect(station);
                 }
                 break;
             case 'Escape':
-                hideResults();
+                hideResults(searchResults);
                 searchInput.blur();
                 break;
         }
@@ -108,8 +150,8 @@ export async function initStationSearch(onSelect) {
 
     // Close on outside click
     document.addEventListener('click', (e) => {
-        if (!e.target.closest('.search-wrapper')) {
-            hideResults();
+        if (!e.target.closest(`#${inputId}`) && !e.target.closest(`#${resultsId}`)) {
+            hideResults(searchResults);
         }
     });
 }
@@ -117,9 +159,8 @@ export async function initStationSearch(onSelect) {
 /**
  * Render search results dropdown
  */
-function renderResults(stations) {
-    const searchResults = $('#searchResults');
-    activeIndex = -1;
+function renderResults(stations, searchResults, state, onSelect) {
+    state.activeIndex = -1;
     searchResults.innerHTML = '';
 
     stations.forEach((station, index) => {
@@ -127,7 +168,7 @@ function renderResults(stations) {
             className: 'search-results__item',
             role: 'option',
             dataset: { index: String(index) },
-            onClick: () => selectStation(station),
+            onClick: () => onSelect(station),
         },
             el('span', { className: 'search-results__name' }, station.StationDesc),
             el('span', { className: 'search-results__code' }, station.StationCode),
@@ -136,16 +177,12 @@ function renderResults(stations) {
     });
 
     searchResults.hidden = false;
-    searchResults.closest('.search-wrapper')
-        ?.querySelector('[role="combobox"]')
-        ?.setAttribute('aria-expanded', 'true');
 }
 
 /**
  * Show no results message
  */
-function showNoResults() {
-    const searchResults = $('#searchResults');
+function showNoResults(searchResults) {
     searchResults.innerHTML = '';
     searchResults.appendChild(
         el('li', { className: 'no-results' }, 'No stations found')
@@ -156,38 +193,20 @@ function showNoResults() {
 /**
  * Hide search results
  */
-function hideResults() {
-    const searchResults = $('#searchResults');
+function hideResults(searchResults) {
     searchResults.hidden = true;
-    activeIndex = -1;
-    searchResults.closest('.search-wrapper')
-        ?.querySelector('[role="combobox"]')
-        ?.setAttribute('aria-expanded', 'false');
 }
 
 /**
  * Update active item highlight
  */
-function updateActiveItem(items) {
+function updateActiveItem(items, activeIndex) {
     items.forEach((item, i) => {
         item.classList.toggle('search-results__item--active', i === activeIndex);
         if (i === activeIndex) {
             item.scrollIntoView({ block: 'nearest' });
         }
     });
-}
-
-/**
- * Select a station
- */
-function selectStation(station) {
-    const searchInput = $('#stationSearch');
-    searchInput.value = station.StationDesc;
-    $('#searchClear').hidden = false;
-    hideResults();
-    if (onSelectCallback) {
-        onSelectCallback(station);
-    }
 }
 
 /**
@@ -202,7 +221,11 @@ function renderQuickStations(container) {
                     StationDesc: station.name,
                     StationCode: station.code,
                 };
-                selectStation(fullStation);
+                // Set the from input and trigger selection
+                const searchInput = $('#stationSearch');
+                searchInput.value = fullStation.StationDesc;
+                $('#searchClear').hidden = false;
+                if (onSelectCallback) onSelectCallback(fullStation);
             },
         }, station.name);
         container.appendChild(chip);
@@ -210,7 +233,7 @@ function renderQuickStations(container) {
 }
 
 /**
- * Get filtered stations based on train type filter
+ * Get all loaded stations
  */
 export function getStations() {
     return allStations;

@@ -10,7 +10,27 @@ let currentStation = null;
 let currentData = [];
 let currentTab = 'departures';
 let currentFilter = 'All';
+let currentDestination = '';
 let onTrainSelectCallback = null;
+
+/**
+ * Map API train type values to filter categories
+ * The API may return "DART", "Mainline", "Suburban", "Intercity", etc.
+ */
+function matchesTrainType(apiType, filterType) {
+    if (!apiType) return false;
+    const type = apiType.trim().toLowerCase();
+    switch (filterType) {
+        case 'DART':
+            return type === 'dart';
+        case 'Mainline':
+            return type === 'mainline' || type === 'intercity';
+        case 'Suburban':
+            return type === 'suburban' || type === 'commuter';
+        default:
+            return true;
+    }
+}
 
 /**
  * Initialize departure board
@@ -98,7 +118,16 @@ function renderBoard() {
 
     // Filter by type
     if (currentFilter !== 'All') {
-        data = data.filter(t => t.Traintype === currentFilter);
+        data = data.filter(t => matchesTrainType(t.Traintype, currentFilter));
+    }
+
+    // Filter by destination if set
+    if (currentDestination) {
+        data = data.filter(t => {
+            const dest = (t.Destination || '').toLowerCase();
+            const target = currentDestination.toLowerCase();
+            return dest.includes(target) || target.includes(dest);
+        });
     }
 
     // Filter by tab (direction)
@@ -227,4 +256,41 @@ function showErrorBoard() {
  */
 export function getCurrentStation() {
     return currentStation;
+}
+
+/**
+ * Reset board to empty state
+ */
+export function resetBoard() {
+    currentStation = null;
+    currentData = [];
+    currentDestination = '';
+    const boardTitle = $('#boardTitle');
+    const boardEmpty = $('#boardEmpty');
+    const boardTableWrap = $('#boardTableWrap');
+    const boardSkeleton = $('#boardSkeleton');
+
+    boardTitle.textContent = 'Select a Station';
+    boardTableWrap.hidden = true;
+    boardSkeleton.hidden = true;
+    boardEmpty.hidden = false;
+    const emptyText = boardEmpty.querySelector('.empty-state__text');
+    if (emptyText) emptyText.textContent = 'Search for a station to see live departures';
+    const emptyHint = boardEmpty.querySelector('.empty-state__hint');
+    if (emptyHint) emptyHint.textContent = 'Try "Dublin Heuston" or "Connolly"';
+
+    // Remove any error state
+    const boardBody = $('#boardBody');
+    const existing = boardBody.querySelector('.error-state');
+    if (existing) existing.remove();
+}
+
+/**
+ * Set destination filter for from/to search
+ */
+export function setDestination(destination) {
+    currentDestination = destination || '';
+    if (currentData.length > 0) {
+        renderBoard();
+    }
 }

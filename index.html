@@ -98,27 +98,63 @@
                 </button>
             </div>
 
-            <div class="search-wrapper">
-                <div class="search-box" role="combobox" aria-expanded="false" aria-haspopup="listbox">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="search-box__icon">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                    </svg>
-                    <input
-                        type="text"
-                        id="stationSearch"
-                        class="search-box__input"
-                        placeholder="Search for a station..."
-                        aria-label="Search stations"
-                        aria-autocomplete="list"
-                        aria-controls="searchResults"
-                        autocomplete="off"
-                    >
-                    <button class="search-box__clear" id="searchClear" aria-label="Clear search" hidden>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                    </button>
+            <div class="route-search">
+                <div class="route-search__field">
+                    <span class="route-search__label">From</span>
+                    <div class="search-wrapper">
+                        <div class="search-box" role="combobox" aria-expanded="false" aria-haspopup="listbox">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="search-box__icon">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                            <input
+                                type="text"
+                                id="stationSearch"
+                                class="search-box__input"
+                                placeholder="Departure station..."
+                                aria-label="Search departure station"
+                                aria-autocomplete="list"
+                                aria-controls="searchResults"
+                                autocomplete="off"
+                            >
+                            <button class="search-box__clear" id="searchClear" aria-label="Clear search" hidden>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            </button>
+                        </div>
+                        <ul class="search-results" id="searchResults" role="listbox" hidden></ul>
+                    </div>
                 </div>
-                <ul class="search-results" id="searchResults" role="listbox" hidden></ul>
+                <div class="route-search__connector">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="route-search__arrow">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                </div>
+                <div class="route-search__field">
+                    <span class="route-search__label">To</span>
+                    <div class="search-wrapper">
+                        <div class="search-box" role="combobox" aria-expanded="false" aria-haspopup="listbox">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="search-box__icon">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                            <input
+                                type="text"
+                                id="destSearch"
+                                class="search-box__input"
+                                placeholder="Destination (optional)..."
+                                aria-label="Search destination station"
+                                aria-autocomplete="list"
+                                aria-controls="destResults"
+                                autocomplete="off"
+                            >
+                            <button class="search-box__clear" id="destClear" aria-label="Clear destination" hidden>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            </button>
+                        </div>
+                        <ul class="search-results" id="destResults" role="listbox" hidden></ul>
+                    </div>
+                </div>
             </div>
 
             <div class="quick-stations" id="quickStations" aria-label="Popular stations">

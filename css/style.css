@@ -350,6 +350,55 @@ body:not([data-theme="light"]) .icon--moon { display: block; }
     gap: var(--space-md);
 }
 
+/* Route Search (From / To) */
+.route-search {
+    display: flex;
+    align-items: flex-end;
+    gap: var(--space-sm);
+}
+
+.route-search__field {
+    flex: 1;
+    min-width: 0;
+}
+
+.route-search__label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-xs);
+    padding-left: 2px;
+}
+
+.route-search__connector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-bottom: 6px;
+    flex-shrink: 0;
+}
+
+.route-search__arrow {
+    width: 24px;
+    height: 24px;
+    color: var(--color-primary-light);
+}
+
+@media (max-width: 600px) {
+    .route-search {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .route-search__connector {
+        padding: 0;
+        transform: rotate(90deg);
+        align-self: center;
+    }
+}
+
 .filter-bar {
     display: flex;
     gap: var(--space-sm);
@@ -569,13 +618,7 @@ body:not([data-theme="light"]) .icon--moon { display: block; }
     z-index: 260;
 }
 
-/* Hide overlay on desktop - journey viewer is inline in grid */
-@media (min-width: 1025px) {
-    .overlay--visible {
-        opacity: 0;
-        pointer-events: none;
-    }
-}
+/* On desktop, overlay is controlled by JS - not shown */
 
 /* ============================================
    Panels
