@@ -9,35 +9,18 @@ import { el, $, formatDueIn, getTrainTypeInfo, getStatusInfo, formatTime, showTo
 let currentStation = null;
 let currentData = [];
 let currentTab = 'departures';
-let currentFilter = 'All';
 let currentDestination = '';
 let onTrainSelectCallback = null;
-
-/**
- * Map API train type values to filter categories
- * The API may return "DART", "Mainline", "Suburban", "Intercity", etc.
- */
-function matchesTrainType(apiType, filterType) {
-    if (!apiType) return false;
-    const type = apiType.trim().toLowerCase();
-    switch (filterType) {
-        case 'DART':
-            return type === 'dart';
-        case 'Mainline':
-            return type === 'mainline' || type === 'intercity';
-        case 'Suburban':
-            return type === 'suburban' || type === 'commuter';
-        default:
-            return true;
-    }
-}
+let onDataLoadedCallback = null;
 
 /**
  * Initialize departure board
  * @param {Function} onTrainSelect - Callback when a train row is clicked
+ * @param {Function} onDataLoaded - Callback after station data loads, receives available destinations
  */
-export function initDepartureBoard(onTrainSelect) {
+export function initDepartureBoard(onTrainSelect, onDataLoaded) {
     onTrainSelectCallback = onTrainSelect;
+    onDataLoadedCallback = onDataLoaded;
 
     // Tab switching
     const tabs = document.querySelectorAll('.panel__tabs .tab');
@@ -75,6 +58,12 @@ export async function loadStation(station) {
         currentData = await getStationData(station.StationCode, 90);
         boardSkeleton.hidden = true;
 
+        // Notify about available destinations (from departing trains only)
+        if (onDataLoadedCallback) {
+            const destinations = getAvailableDestinations();
+            onDataLoadedCallback(destinations);
+        }
+
         if (currentData.length === 0) {
             showEmptyBoard('No trains scheduled in the next 90 minutes');
         } else {
@@ -88,6 +77,19 @@ export async function loadStation(station) {
 }
 
 /**
+ * Get unique destinations from departing trains
+ */
+export function getAvailableDestinations() {
+    // Only get destinations from trains that actually depart from this station
+    const departures = currentData.filter(t => t.Expdepart && t.Expdepart !== '00:00');
+    const destSet = new Set();
+    departures.forEach(t => {
+        if (t.Destination) destSet.add(t.Destination);
+    });
+    return [...destSet].sort();
+}
+
+/**
  * Refresh current station data
  */
 export async function refresh() {
@@ -97,10 +99,10 @@ export async function refresh() {
 }
 
 /**
- * Set the train type filter
+ * Set destination filter for from/to search
  */
-export function setFilter(filter) {
-    currentFilter = filter;
+export function setDestination(destination) {
+    currentDestination = destination || '';
     if (currentData.length > 0) {
         renderBoard();
     }
@@ -116,33 +118,34 @@ function renderBoard() {
 
     let data = [...currentData];
 
-    // Filter by type
-    if (currentFilter !== 'All') {
-        data = data.filter(t => matchesTrainType(t.Traintype, currentFilter));
+    // Filter by departures vs arrivals using API fields
+    if (currentTab === 'departures') {
+        // Departures: exclude trains terminating here (Expdepart = 00:00)
+        data = data.filter(t => t.Expdepart && t.Expdepart !== '00:00');
+    } else {
+        // Arrivals: exclude trains originating here (Exparrival = 00:00)
+        data = data.filter(t => t.Exparrival && t.Exparrival !== '00:00');
     }
 
-    // Filter by destination if set
-    if (currentDestination) {
+    // Filter by destination if set (only relevant for departures)
+    if (currentDestination && currentTab === 'departures') {
         data = data.filter(t => {
             const dest = (t.Destination || '').toLowerCase();
             const target = currentDestination.toLowerCase();
-            return dest.includes(target) || target.includes(dest);
+            return dest === target;
         });
     }
 
-    // Filter by tab (direction)
-    // "departures" shows trains departing from this station, "arrivals" shows arriving
-    // The API doesn't separate these cleanly, so we use Locationtype
-    if (currentTab === 'departures') {
-        data.sort((a, b) => parseInt(a.Duein) - parseInt(b.Duein));
-    } else {
-        data.sort((a, b) => parseInt(a.Duein) - parseInt(b.Duein));
-    }
+    // Sort by due time
+    data.sort((a, b) => parseInt(a.Duein) - parseInt(b.Duein));
 
     if (data.length === 0) {
         boardTableWrap.hidden = true;
-        const filterLabel = currentFilter !== 'All' ? ` ${currentFilter}` : '';
-        showEmptyBoard(`No${filterLabel} trains found`);
+        if (currentDestination) {
+            showEmptyBoard(`No direct trains to ${currentDestination}`);
+        } else {
+            showEmptyBoard(`No ${currentTab} in the next 90 minutes`);
+        }
         return;
     }
 
@@ -150,7 +153,7 @@ function renderBoard() {
     boardTableWrap.hidden = false;
     boardBody.innerHTML = '';
 
-    data.forEach((train, index) => {
+    data.forEach((train) => {
         const statusInfo = getStatusInfo(train.Late, train.Status);
         const typeInfo = getTrainTypeInfo(train.Traintype);
         const dueText = formatDueIn(train.Duein);
@@ -167,7 +170,6 @@ function renderBoard() {
         const row = el('tr', {
             className: `board-table__row`,
             onClick: () => {
-                // Highlight selected row
                 document.querySelectorAll('.board-table__row--selected').forEach(r =>
                     r.classList.remove('board-table__row--selected')
                 );
@@ -226,12 +228,10 @@ function showErrorBoard() {
     boardEmpty.hidden = true;
     boardTableWrap.hidden = true;
 
-    // Remove existing error state
     const existing = boardBody.querySelector('.error-state');
     if (existing) existing.remove();
 
     const errorEl = el('div', { className: 'error-state' },
-        el('svg', {}, ''),
         el('p', { className: 'error-state__text' }, 'Unable to load train data. Please try again.'),
         el('button', {
             className: 'error-state__btn',
@@ -242,8 +242,6 @@ function showErrorBoard() {
         }, 'Retry'),
     );
 
-    // Add error icon
-    errorEl.querySelector('svg')?.remove();
     const iconWrap = el('div', { className: 'error-state__icon' });
     iconWrap.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
     errorEl.prepend(iconWrap);
@@ -252,7 +250,7 @@ function showErrorBoard() {
 }
 
 /**
- * Get current station code
+ * Get current station
  */
 export function getCurrentStation() {
     return currentStation;
@@ -279,18 +277,7 @@ export function resetBoard() {
     const emptyHint = boardEmpty.querySelector('.empty-state__hint');
     if (emptyHint) emptyHint.textContent = 'Try "Dublin Heuston" or "Connolly"';
 
-    // Remove any error state
     const boardBody = $('#boardBody');
     const existing = boardBody.querySelector('.error-state');
     if (existing) existing.remove();
-}
-
-/**
- * Set destination filter for from/to search
- */
-export function setDestination(destination) {
-    currentDestination = destination || '';
-    if (currentData.length > 0) {
-        renderBoard();
-    }
 }

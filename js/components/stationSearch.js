@@ -18,6 +18,7 @@ const POPULAR_STATIONS = [
 ];
 
 let allStations = [];
+let availableDestinations = []; // destinations served by "From" station
 let onSelectCallback = null;
 let onClearCallback = null;
 let onDestinationCallback = null;
@@ -45,14 +46,49 @@ export async function initStationSearch(callbacks) {
         allStations = [];
     }
 
-    // Setup "From" search
-    setupSearchInput('stationSearch', 'searchClear', 'searchResults', 'from', (station) => {
-        if (onSelectCallback) onSelectCallback(station);
+    // Setup "From" search — searches all stations
+    setupSearchInput({
+        inputId: 'stationSearch',
+        clearId: 'searchClear',
+        resultsId: 'searchResults',
+        stateKey: 'from',
+        getSearchList: () => allStations,
+        onSelect: (station) => {
+            if (onSelectCallback) onSelectCallback(station);
+        },
+        onClear: () => {
+            // Reset "To" field as well
+            const destInput = $('#destSearch');
+            const destClear = $('#destClear');
+            if (destInput) destInput.value = '';
+            if (destClear) destClear.hidden = true;
+            availableDestinations = [];
+            if (onClearCallback) onClearCallback();
+        },
     });
 
-    // Setup "To" search
-    setupSearchInput('destSearch', 'destClear', 'destResults', 'to', (station) => {
-        if (onDestinationCallback) onDestinationCallback(station);
+    // Setup "To" search — only searches available destinations
+    setupSearchInput({
+        inputId: 'destSearch',
+        clearId: 'destClear',
+        resultsId: 'destResults',
+        stateKey: 'to',
+        getSearchList: () => {
+            // Only show stations that are destinations of departing trains
+            if (availableDestinations.length === 0) return [];
+            return allStations.filter(s =>
+                availableDestinations.some(d =>
+                    d.toLowerCase() === s.StationDesc.toLowerCase()
+                )
+            );
+        },
+        onSelect: (station) => {
+            if (onDestinationCallback) onDestinationCallback(station);
+        },
+        onClear: () => {
+            if (onDestinationCallback) onDestinationCallback(null);
+        },
+        placeholder: 'Filter by destination...',
     });
 
     // Render popular stations
@@ -60,14 +96,30 @@ export async function initStationSearch(callbacks) {
 }
 
 /**
+ * Set the available destinations for the "To" dropdown
+ * Called after "From" station data loads
+ * @param {string[]} destinations - Array of destination station names
+ */
+export function setAvailableDestinations(destinations) {
+    availableDestinations = destinations || [];
+    // Clear previous "To" selection when new From station is loaded
+    const destInput = $('#destSearch');
+    const destClear = $('#destClear');
+    if (destInput) destInput.value = '';
+    if (destClear) destClear.hidden = true;
+}
+
+/**
  * Setup autocomplete for a search input
  */
-function setupSearchInput(inputId, clearId, resultsId, stateKey, onSelect) {
+function setupSearchInput({ inputId, clearId, resultsId, stateKey, getSearchList, onSelect, onClear, placeholder }) {
     const searchInput = $(`#${inputId}`);
     const searchClear = $(`#${clearId}`);
     const searchResults = $(`#${resultsId}`);
 
     if (!searchInput || !searchClear || !searchResults) return;
+
+    if (placeholder) searchInput.placeholder = placeholder;
 
     const state = searchState[stateKey];
 
@@ -76,14 +128,21 @@ function setupSearchInput(inputId, clearId, resultsId, stateKey, onSelect) {
             hideResults(searchResults);
             return;
         }
-        state.filteredStations = allStations
+
+        const searchList = getSearchList();
+        if (searchList.length === 0 && stateKey === 'to') {
+            showMessage(searchResults, 'Select a departure station first');
+            return;
+        }
+
+        state.filteredStations = searchList
             .map(s => ({ ...s, score: fuzzyScore(query, s.StationDesc + (s.StationAlias || '')) }))
             .filter(s => s.score > 0)
             .sort((a, b) => b.score - a.score)
             .slice(0, 15);
 
         if (state.filteredStations.length === 0) {
-            showNoResults(searchResults);
+            showMessage(searchResults, 'No matching stations');
         } else {
             renderResults(state.filteredStations, searchResults, state, (station) => {
                 searchInput.value = station.StationDesc;
@@ -93,6 +152,25 @@ function setupSearchInput(inputId, clearId, resultsId, stateKey, onSelect) {
             });
         }
     }, 200);
+
+    // Show all available destinations on focus (for "To" input)
+    searchInput.addEventListener('focus', () => {
+        if (stateKey === 'to' && !searchInput.value) {
+            const searchList = getSearchList();
+            if (searchList.length === 0) {
+                showMessage(searchResults, 'Select a departure station first');
+                return;
+            }
+            // Show all available destinations
+            state.filteredStations = searchList.slice(0, 20);
+            renderResults(state.filteredStations, searchResults, state, (station) => {
+                searchInput.value = station.StationDesc;
+                searchClear.hidden = false;
+                hideResults(searchResults);
+                onSelect(station);
+            });
+        }
+    });
 
     searchInput.addEventListener('input', (e) => {
         const query = e.target.value.trim();
@@ -106,13 +184,7 @@ function setupSearchInput(inputId, clearId, resultsId, stateKey, onSelect) {
         searchClear.hidden = true;
         hideResults(searchResults);
         searchInput.focus();
-
-        if (stateKey === 'from' && onClearCallback) {
-            onClearCallback();
-        }
-        if (stateKey === 'to' && onDestinationCallback) {
-            onDestinationCallback(null);
-        }
+        if (onClear) onClear();
     });
 
     // Keyboard navigation
@@ -180,12 +252,12 @@ function renderResults(stations, searchResults, state, onSelect) {
 }
 
 /**
- * Show no results message
+ * Show a message in the dropdown
  */
-function showNoResults(searchResults) {
+function showMessage(searchResults, message) {
     searchResults.innerHTML = '';
     searchResults.appendChild(
-        el('li', { className: 'no-results' }, 'No stations found')
+        el('li', { className: 'no-results' }, message)
     );
     searchResults.hidden = false;
 }
@@ -221,7 +293,6 @@ function renderQuickStations(container) {
                     StationDesc: station.name,
                     StationCode: station.code,
                 };
-                // Set the from input and trigger selection
                 const searchInput = $('#stationSearch');
                 searchInput.value = fullStation.StationDesc;
                 $('#searchClear').hidden = false;
